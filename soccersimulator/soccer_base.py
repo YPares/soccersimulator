@@ -179,6 +179,26 @@ class Vector2D(object):
         res.random(low,high)
         return res
 
+class Zone:
+    """Contains 2 vectors: bottom_left and diagonal"""
+
+    def __init__(self, bottom_left, diagonal):
+        self.__bottom_left = bottom_left
+        self.__diagonal = diagonal
+
+    @property
+    def bottom_left(self):
+        return self.__bottom_left
+
+    @property
+    def diagonal(self):
+        return self.__diagonal
+
+    def contains(self, pt):
+        pt_from_zone = pt - self.__bottom_left
+        return (0 <= pt_from_zone.x && pt_from_zone.x <= self.__diagonal.x &&
+                0 <= pt_from_zone.y && pt_from_zone.y <= self.__diagonal.y)
+
 
 # class SoccerException(Exception):
 #     def __init__(self,msg):

@@ -36,6 +36,25 @@ class SoccerAction(object):
         return self
 
 
+class Zone:
+    """Contains 2 vectors: bottom_left and diagonal"""
+
+    def __init__(self, bottom_left, diagonal):
+        self.__bottom_left = bottom_left
+        self.__diagonal = diagonal
+
+    @property
+    def bottom_left(self):
+        return self.__bottom_left
+
+    @property
+    def diagonal(self):
+        return self.__diagonal
+
+    def contains_point(self, pt):
+        pt_from_zone = pt - self.__bottom_left
+        return (0 <= pt_from_zone.x && pt_from_zone.x <= self.__diagonal.x &&
+                0 <= pt_from_zone.y && pt_from_zone.y <= self.__diagonal.y)
 
 ###############################################################################
 # SoccerState
@@ -66,6 +85,7 @@ class SoccerState:
         self.actions_team1=None
         self.actions_team2=None
         self.cst.update(cst)
+        self.danger_zones = []
 
     def __eq__(self,other):
         return (self.team1 == other.team1) and (self.team2 == other.team2) and (self.ball == other.ball)
@@ -122,6 +142,9 @@ class SoccerState:
 
     """ implementation """
 
+    def _zombify_player(self, player):
+        pass # TODO!!
+
     def apply_action(self,player,action):
         if not action:
             return
@@ -146,6 +169,12 @@ class SoccerState:
             action_shoot.angle=action_shoot.angle+((2*random.random()-1.)*(angle_factor+dist_factor)/2.)*self.cst["shootRandomAngle"]*math.pi/2.
             self.sum_of_shoots+=action_shoot
 
+        previous_danger_zone = None
+        for z in self.danger_zones:
+            if z.contains(player.position):
+                previous_danger_zone = z
+                break
+
         if action_acceleration.norm>self.cst["maxPlayerAcceleration"]:
             action_acceleration.norm=self.cst["maxPlayerAcceleration"]
         player.speed*=(1-self.cst["playerBrackConstant"])
@@ -165,6 +194,10 @@ class SoccerState:
         if player.position.y>self.height:
             player.position.y=self.height
             player.speed=0
+
+        # We test if player has left his danger zone:
+        if previous_danger_zone and not previous_danger_zone.contains(player.position):
+            self._zombify_player(player)
 
     def apply_actions(self):
         self.sum_of_shoots=Vector2D()
