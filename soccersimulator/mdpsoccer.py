@@ -123,15 +123,16 @@ class SoccerState:
 
     """ implementation """
 
-    def _zombify_player(self, player):
-        print "Player should be ZOMBIFUNCKINFIED!"
-
     def apply_action(self,player,action):
         if not action:
             return
         action_shoot=action.shoot.copy()
         action_acceleration=action.acceleration.copy()
 
+        danger_zones = [z for z in self.danger_zones if z.contains(player.position)]
+        on_ice = any(z.type == "ice" for z in danger_zones)
+        on_mud = (not on_ice) and any(z.type == "mud" for z in danger_zones)
+        
         if action_shoot.norm>self.cst["maxPlayerShoot"]:
             action_shoot.norm=self.cst["maxPlayerShoot"]
         player.dec_num_before_shoot()
@@ -148,10 +149,9 @@ class SoccerState:
             dist_factor=1.-dist_to_ball/(self.cst["PLAYER_RADIUS"]+self.cst["BALL_RADIUS"])
             action_shoot.scale(1-angle_factor*0.25-dist_factor*0.25)
             action_shoot.angle=action_shoot.angle+((2*random.random()-1.)*(angle_factor+dist_factor)/2.)*self.cst["shootRandomAngle"]*math.pi/2.
+            if on_ice:
+                action_shoot.angle=random.normalvariate(action_shoot.angle, math.pi/6)
             self.sum_of_shoots+=action_shoot
-
-        previous_danger_zones = [z for z in self.danger_zones
-                                 if z.contains(player.position)]
 
         if action_acceleration.norm>self.cst["maxPlayerAcceleration"]:
             action_acceleration.norm=self.cst["maxPlayerAcceleration"]
@@ -159,6 +159,13 @@ class SoccerState:
         player.speed_v=player.speed_v+action_acceleration
         if player.speed>self.cst["maxPlayerSpeed"]:
             player.speed=self.cst["maxPlayerSpeed"]
+        if on_ice:
+            player.speed_v = \
+                Vector2D.create_polar(random.normalvariate(player.speed_v.angle, math.pi/6),
+                                      player.speed_v.norm*1.8)
+        else:
+            if on_mud:
+                player.speed*=0.6
         player.position=player.position+player.speed_v
         if player.position.x<0:
             player.position.x=0
@@ -172,11 +179,7 @@ class SoccerState:
         if player.position.y>self.height:
             player.position.y=self.height
             player.speed=0
-
-        # We test if player has left his danger zone:
-        if previous_danger_zone and not previous_danger_zone.contains(player.position):
-            self._zombify_player(player)
-
+            
     def apply_actions(self):
         self.sum_of_shoots=Vector2D()
         for i,action in enumerate(self.actions_team1):
@@ -582,12 +585,15 @@ class SoccerBattle(object):
         state.battles_count=self.battles_count
         state.cur_battle=self.cur_battle
 
+        num_danger_zones = int(random.normalvariate(2.7,0.4))
+        magnif = 4-num_danger_zones
         min_offset = state.width*0.04
-        mean_diag = Vector2D(state.width*0.18, state.height*0.12)
-        stddev_diag = Vector2D(state.width*0.07, state.height*0.05)
+        mean_diag = Vector2D(state.width*0.2*magnif,
+                             state.height*0.12*magnif)
+        stddev_diag = Vector2D(state.width*0.12*magnif,
+                               state.height*0.05*magnif)
         team1_east_boundary = max(p.position.x for p in state.team1) + min_offset
         team2_west_boundary = min(p.position.x for p in state.team2) - min_offset - (mean_diag.x + 2*stddev_diag.x)
-        num_danger_zones = int(random.normalvariate(2.7,0.4))
         btm_left_corners = \
             (Vector2D(random.uniform(team1_east_boundary,
                                      team2_west_boundary),
@@ -597,7 +603,8 @@ class SoccerBattle(object):
         state.danger_zones = \
             [Zone(blc,
                   Vector2D(random.normalvariate(mean_diag.x, stddev_diag.x),
-                           random.normalvariate(mean_diag.y, stddev_diag.y)))
+                           random.normalvariate(mean_diag.y, stddev_diag.y)),
+                  "ice" if random.randint(0,1)==0 else "mud")
              for blc in btm_left_corners]
         
         return state

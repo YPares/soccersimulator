@@ -180,11 +180,13 @@ class Vector2D(object):
         return res
 
 class Zone:
-    """Contains 2 vectors: bottom_left and diagonal"""
+    """Contains 2 vectors: bottom_left and diagonal.
+    Contains also a type, that can be "mud" or "ice"."""
 
-    def __init__(self, bottom_left, diagonal):
+    def __init__(self, bottom_left, diagonal, type):
         self.__bottom_left = bottom_left
         self.__diagonal = diagonal
+        self.__type = type
 
     @property
     def bottom_left(self):
@@ -194,6 +196,10 @@ class Zone:
     def diagonal(self):
         return self.__diagonal
 
+    @property
+    def type(self):
+        return self.__type
+    
     def contains(self, pt):
         pt_from_zone = pt - self.__bottom_left
         return (0 <= pt_from_zone.x and pt_from_zone.x <= self.__diagonal.x and

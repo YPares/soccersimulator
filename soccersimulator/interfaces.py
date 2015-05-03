@@ -19,7 +19,8 @@ import zlib
 import pdb
 #soccer_base  cste
 
-ZONE_COLOR=[0.3,0.3,0.3]
+ICE_ZONE_COLOR=[0.1,0.8,0.9]
+MUD_ZONE_COLOR=[0.3,0.3,0.3]
 
 ##############################################################################
 ## interfaces
@@ -490,7 +491,8 @@ class PygletAbstractObserver(pyglet.window.Window):
                                 h=z.diagonal.y
                                 prim.append(Primitive2DGL([(x,y),(x,y+h),
                                                            (x+w,y+h),
-                                                           (x+w,y)],ZONE_COLOR))
+                                                           (x+w,y)],
+                                                          ICE_ZONE_COLOR if z.type=="ice" else MUD_ZONE_COLOR))
                             tmp = ObjectSprite("zones", False, prim)
                             tmp.draw()
                         for d in self._sprites.values():
