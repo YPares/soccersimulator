@@ -19,6 +19,8 @@ import zlib
 import pdb
 #soccer_base  cste
 
+ZONE_COLOR=[0.3,0.3,0.3]
+
 ##############################################################################
 ## interfaces
 ##############################################################################
@@ -478,6 +480,19 @@ class PygletAbstractObserver(pyglet.window.Window):
                     if  self.get_state():
                         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
                         self._background.draw()
+                        state = self.get_state()
+                        if hasattr(state, "danger_zones"):
+                            prim=[]
+                            for z in state.danger_zones:
+                                x=z.bottom_left.x
+                                y=z.bottom_left.y
+                                w = z.diagonal.x
+                                h=z.diagonal.y
+                                prim.append(Primitive2DGL([(x,y),(x,y+h),
+                                                           (x+w,y+h),
+                                                           (x+w,y)],ZONE_COLOR))
+                            tmp = ObjectSprite("zones", False, prim)
+                            tmp.draw()
                         for d in self._sprites.values():
                             d.draw()
                     self.hud.draw()

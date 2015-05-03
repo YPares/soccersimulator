@@ -196,8 +196,8 @@ class Zone:
 
     def contains(self, pt):
         pt_from_zone = pt - self.__bottom_left
-        return (0 <= pt_from_zone.x && pt_from_zone.x <= self.__diagonal.x &&
-                0 <= pt_from_zone.y && pt_from_zone.y <= self.__diagonal.y)
+        return (0 <= pt_from_zone.x and pt_from_zone.x <= self.__diagonal.x and
+                0 <= pt_from_zone.y and pt_from_zone.y <= self.__diagonal.y)
 
 
 # class SoccerException(Exception):

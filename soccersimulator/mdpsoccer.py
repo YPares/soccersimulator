@@ -4,6 +4,7 @@ from soccer_base import *
 import soccerobj
 import math
 import time
+import random
 
 from copy import deepcopy
 import strategies
@@ -35,26 +36,6 @@ class SoccerAction(object):
         self.shoot-=other.shoot
         return self
 
-
-class Zone:
-    """Contains 2 vectors: bottom_left and diagonal"""
-
-    def __init__(self, bottom_left, diagonal):
-        self.__bottom_left = bottom_left
-        self.__diagonal = diagonal
-
-    @property
-    def bottom_left(self):
-        return self.__bottom_left
-
-    @property
-    def diagonal(self):
-        return self.__diagonal
-
-    def contains_point(self, pt):
-        pt_from_zone = pt - self.__bottom_left
-        return (0 <= pt_from_zone.x && pt_from_zone.x <= self.__diagonal.x &&
-                0 <= pt_from_zone.y && pt_from_zone.y <= self.__diagonal.y)
 
 ###############################################################################
 # SoccerState
@@ -143,7 +124,7 @@ class SoccerState:
     """ implementation """
 
     def _zombify_player(self, player):
-        pass # TODO!!
+        print "Player should be ZOMBIFUNCKINFIED!"
 
     def apply_action(self,player,action):
         if not action:
@@ -603,6 +584,25 @@ class SoccerBattle(object):
         state.max_steps=self.max_steps
         state.battles_count=self.battles_count
         state.cur_battle=self.cur_battle
+
+        min_offset = state.width*0.04
+        mean_diag = Vector2D(state.width*0.15, state.height*0.07)
+        stddev_diag = Vector2D(state.width*0.08, state.height*0.04)
+        team1_east_boundary = max(p.position.x for p in state.team1) + min_offset
+        team2_west_boundary = min(p.position.x for p in state.team2) - min_offset - (mean_diag.x + 2*stddev_diag.x)
+        num_danger_zones = random.randint(1,3)
+        btm_left_corners = \
+            (Vector2D(random.uniform(team1_east_boundary,
+                                     team2_west_boundary),
+                      random.uniform(0,
+                                     state.height - (mean_diag.y+2*stddev_diag.y)))
+             for _ in range(0, num_danger_zones))
+        state.danger_zones = \
+            [Zone(blc,
+                  Vector2D(random.normalvariate(mean_diag.x, stddev_diag.x),
+                           random.normalvariate(mean_diag.y, stddev_diag.y)))
+             for blc in btm_left_corners]
+        
         return state
 
     def send_to_strat(self,*args,**kwargs):
