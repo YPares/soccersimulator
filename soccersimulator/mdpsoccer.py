@@ -150,11 +150,8 @@ class SoccerState:
             action_shoot.angle=action_shoot.angle+((2*random.random()-1.)*(angle_factor+dist_factor)/2.)*self.cst["shootRandomAngle"]*math.pi/2.
             self.sum_of_shoots+=action_shoot
 
-        previous_danger_zone = None
-        for z in self.danger_zones:
-            if z.contains(player.position):
-                previous_danger_zone = z
-                break
+        previous_danger_zones = [z for z in self.danger_zones
+                                 if z.contains(player.position)]
 
         if action_acceleration.norm>self.cst["maxPlayerAcceleration"]:
             action_acceleration.norm=self.cst["maxPlayerAcceleration"]
@@ -586,16 +583,16 @@ class SoccerBattle(object):
         state.cur_battle=self.cur_battle
 
         min_offset = state.width*0.04
-        mean_diag = Vector2D(state.width*0.15, state.height*0.07)
-        stddev_diag = Vector2D(state.width*0.08, state.height*0.04)
+        mean_diag = Vector2D(state.width*0.18, state.height*0.12)
+        stddev_diag = Vector2D(state.width*0.07, state.height*0.05)
         team1_east_boundary = max(p.position.x for p in state.team1) + min_offset
         team2_west_boundary = min(p.position.x for p in state.team2) - min_offset - (mean_diag.x + 2*stddev_diag.x)
-        num_danger_zones = random.randint(1,3)
+        num_danger_zones = int(random.normalvariate(2.7,0.4))
         btm_left_corners = \
             (Vector2D(random.uniform(team1_east_boundary,
                                      team2_west_boundary),
-                      random.uniform(0,
-                                     state.height - (mean_diag.y+2*stddev_diag.y)))
+                      random.normalvariate(state.height*0.5 - mean_diag.x*0.5,
+                                           state.height*0.1))
              for _ in range(0, num_danger_zones))
         state.danger_zones = \
             [Zone(blc,
