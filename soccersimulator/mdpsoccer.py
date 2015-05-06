@@ -557,25 +557,28 @@ class SoccerBattle(object):
 
     def create_danger_zones(self, state):
         num_danger_zones = random.randint(1,3) #int(random.normalvariate(2.7, 0.4))
-        magnif = 1 + 0.6*(3-num_danger_zones)
+        magnif = 1 + 0.5*(3-num_danger_zones)
         min_offset = state.width*0.04
-        mean_diag = Vector2D(state.width*0.25*magnif,
-                             state.height*0.12*magnif)
+        mean_diag = Vector2D(state.width*0.28*magnif,
+                             state.height*0.17*magnif)
         stddev_diag = Vector2D(state.width*0.07*magnif,
                                state.height*0.05*magnif)
-        team1_east_boundary = max(p.position.x for p in state.team1) + min_offset
-        team2_west_boundary = min(p.position.x for p in state.team2) - min_offset - (mean_diag.x + 2*stddev_diag.x)
-        btm_left_corners = \
+        team1_east_boundary = max(p.position.x for p in state.team1) + min_offset + (mean_diag.x + stddev_diag.x)/2
+        team2_west_boundary = min(p.position.x for p in state.team2) - min_offset - (mean_diag.x + stddev_diag.x)/2
+        centers = \
             (Vector2D(random.uniform(team1_east_boundary,
                                      team2_west_boundary),
-                      random.normalvariate(state.height*0.5 - mean_diag.y*0.5,
-                                           state.height*0.2))
+                      random.normalvariate(state.height*0.5,
+                                           state.height*0.18/magnif))
              for _ in range(0, num_danger_zones))
-        zones = [Zone(blc,
-                      Vector2D(random.normalvariate(mean_diag.x, stddev_diag.x),
-                               random.normalvariate(mean_diag.y, stddev_diag.y)),
-                      "ice" if random.randint(0,1)==0 else "mud")
-                 for blc in btm_left_corners]
+        def zone_from_center(center):
+            diag = Vector2D(random.normalvariate(mean_diag.x, stddev_diag.x),
+                            random.normalvariate(mean_diag.y, stddev_diag.y))
+            half_diag = diag.copy()
+            half_diag.product(0.5)
+            return Zone(center - half_diag, diag,
+                        "ice" if random.randint(0,1)==0 else "mud")
+        zones = [zone_from_center(c) for c in centers]
         print zones
         return zones
 
