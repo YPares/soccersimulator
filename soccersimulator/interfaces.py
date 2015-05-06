@@ -486,7 +486,7 @@ class PygletAbstractObserver(pyglet.window.Window):
                         if hasattr(state, "danger_zones"):
                             prim = []
                             for z in sorted(state.danger_zones,
-                                            cmp = lambda z1, z2: -1 if z1.type=="mud" else 1): # MUD zones first, so ICE zones covers them
+                                            cmp = lambda z1, z2: -1 if z1.type=="mud" else 1): # MUD zones first, so ICE zones cover them
                                 x = z.bottom_left.x
                                 y = z.bottom_left.y
                                 w = z.diagonal.x

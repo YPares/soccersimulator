@@ -555,6 +555,30 @@ class SoccerBattle(object):
         self._ongoing_battle=False
         self._is_ready=True
 
+    def create_danger_zones(self, state):
+        num_danger_zones = random.randint(1,3) #int(random.normalvariate(2.7, 0.4))
+        magnif = 2*math.log(4-num_danger_zones)
+        min_offset = state.width*0.04
+        mean_diag = Vector2D(state.width*0.25*magnif,
+                             state.height*0.12*magnif)
+        stddev_diag = Vector2D(state.width*0.07*magnif,
+                               state.height*0.05*magnif)
+        team1_east_boundary = max(p.position.x for p in state.team1) + min_offset
+        team2_west_boundary = min(p.position.x for p in state.team2) - min_offset - (mean_diag.x + 2*stddev_diag.x)
+        btm_left_corners = \
+            (Vector2D(random.uniform(team1_east_boundary,
+                                     team2_west_boundary),
+                      random.normalvariate(state.height*0.5 - mean_diag.y*0.5,
+                                           state.height*0.2))
+             for _ in range(0, num_danger_zones))
+        zones = [Zone(blc,
+                      Vector2D(random.normalvariate(mean_diag.x, stddev_diag.x),
+                               random.normalvariate(mean_diag.y, stddev_diag.y)),
+                      "ice" if random.randint(0,1)==0 else "mud")
+                 for blc in btm_left_corners]
+        print zones
+        return zones
+
     def create_initial_state(self):
         state=SoccerState(self.team1.copy(),self.team2.copy(),soccerobj.SoccerBall(),self.cst)
         quarters=[i*state.height/4 for i in range(1,4)]
@@ -584,29 +608,7 @@ class SoccerBattle(object):
         state.max_steps=self.max_steps
         state.battles_count=self.battles_count
         state.cur_battle=self.cur_battle
-
-        num_danger_zones = int(random.normalvariate(2.7,0.4))
-        magnif = 4-num_danger_zones
-        min_offset = state.width*0.04
-        mean_diag = Vector2D(state.width*0.2*magnif,
-                             state.height*0.12*magnif)
-        stddev_diag = Vector2D(state.width*0.12*magnif,
-                               state.height*0.05*magnif)
-        team1_east_boundary = max(p.position.x for p in state.team1) + min_offset
-        team2_west_boundary = min(p.position.x for p in state.team2) - min_offset - (mean_diag.x + 2*stddev_diag.x)
-        btm_left_corners = \
-            (Vector2D(random.uniform(team1_east_boundary,
-                                     team2_west_boundary),
-                      random.normalvariate(state.height*0.5 - mean_diag.x*0.5,
-                                           state.height*0.1))
-             for _ in range(0, num_danger_zones))
-        state.danger_zones = \
-            [Zone(blc,
-                  Vector2D(random.normalvariate(mean_diag.x, stddev_diag.x),
-                           random.normalvariate(mean_diag.y, stddev_diag.y)),
-                  "ice" if random.randint(0,1)==0 else "mud")
-             for blc in btm_left_corners]
-        
+        state.danger_zones = self.create_danger_zones(state)
         return state
 
     def send_to_strat(self,*args,**kwargs):

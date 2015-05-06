@@ -188,6 +188,9 @@ class Zone:
         self.__diagonal = diagonal
         self.__type = type
 
+    def __repr__(self):
+        return "<%s zone: BL=%s, DIAG=%s>" % (self.__type, self.__bottom_left, self.__diagonal)
+
     @property
     def bottom_left(self):
         return self.__bottom_left
