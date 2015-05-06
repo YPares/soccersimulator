@@ -474,6 +474,7 @@ class PygletAbstractObserver(pyglet.window.Window):
         for p in self._soccer_battle.team2.players:
             self._sprites[(p.name,2)]=PlayerSprite(p.name,2,self)
         self._background=BackgroundSprite(self)
+
     def render(self):
         try:
             if self.ongoing:
@@ -483,12 +484,13 @@ class PygletAbstractObserver(pyglet.window.Window):
                         self._background.draw()
                         state = self.get_state()
                         if hasattr(state, "danger_zones"):
-                            prim=[]
-                            for z in state.danger_zones:
-                                x=z.bottom_left.x
-                                y=z.bottom_left.y
+                            prim = []
+                            for z in sorted(state.danger_zones,
+                                            cmp = lambda z1, z2: -1 if z1.type=="mud" else 1): # MUD zones first, so ICE zones covers them
+                                x = z.bottom_left.x
+                                y = z.bottom_left.y
                                 w = z.diagonal.x
-                                h=z.diagonal.y
+                                h = z.diagonal.y
                                 prim.append(Primitive2DGL([(x,y),(x,y+h),
                                                            (x+w,y+h),
                                                            (x+w,y)],
