@@ -557,7 +557,7 @@ class SoccerBattle(object):
 
     def create_danger_zones(self, state):
         num_danger_zones = random.randint(1,3) #int(random.normalvariate(2.7, 0.4))
-        magnif = 2*math.log(4-num_danger_zones)
+        magnif = 1 + 0.6*(3-num_danger_zones)
         min_offset = state.width*0.04
         mean_diag = Vector2D(state.width*0.25*magnif,
                              state.height*0.12*magnif)
